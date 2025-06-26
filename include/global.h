@@ -17,6 +17,7 @@
 
 extern int* page_table_ptr;
 extern int process_global_cnt;
+extern int active_process_cnt;
 
 
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "include/process.h"
 #include "include/memory.h"
@@ -9,6 +10,8 @@ MMU_config config;
 
 int main(int argv, char** argc){
 
+    srand(time(NULL));
+
     config.disk_size = DISK_SIZE;
     config.ram_size = RAM_SIZE;
     config.max_pt_blocks = RAM_SIZE / 2;
@@ -16,23 +19,22 @@ int main(int argv, char** argc){
 
     mmu_init(&mmu, &config);
     
-    print(mmu.pt_blocks, &mmu.pt_block_count);
-    allocate_page_table(12, mmu.pt_blocks, &mmu.pt_block_count);
-    print(mmu.pt_blocks, &mmu.pt_block_count);
-    allocate_page_table(18, mmu.pt_blocks, &mmu.pt_block_count);
-    print(mmu.pt_blocks, &mmu.pt_block_count);
-    allocate_page_table(4, mmu.pt_blocks, &mmu.pt_block_count);
-    print(mmu.pt_blocks, &mmu.pt_block_count);
-    allocate_page_table(12, mmu.pt_blocks, &mmu.pt_block_count);
-    print(mmu.pt_blocks, &mmu.pt_block_count);
-    allocate_page_table(17, mmu.pt_blocks, &mmu.pt_block_count);
-    print(mmu.pt_blocks, &mmu.pt_block_count);
-    free_page_table(30, mmu.pt_blocks, &mmu.pt_block_count);
-    free_page_table(34, mmu.pt_blocks, &mmu.pt_block_count);
-    print(mmu.pt_blocks, &mmu.pt_block_count);
-    allocate_page_table(16, mmu.pt_blocks, &mmu.pt_block_count);
-    print(mmu.pt_blocks, &mmu.pt_block_count);
-    allocate_page_table(12, mmu.pt_blocks, &mmu.pt_block_count);
+    for (int i = 0; i < 10; i++){
+        int frames = 1 + rand() % 20;
+        process_data p_data = {
+            .mmu = &mmu, 
+            .frames_requested = frames
+        };
+        process* p = create_process(NULL, &p_data);;
+        if (p == NULL){
+            printf("impossibile to create process\n");
+            continue;
+        }
+        printf("printing p_data to check: frames requested: %d\n", p_data.frames_requested);
+        
+        printf("created process %d: requested frames: %d, start in memory: %d\nmemory situation:\n", p->pid, p->pt_size, (int)(p->pt_ptr - p_data.mmu->RAM));
+        print(mmu.pt_blocks, &(mmu.pt_block_count));
+    }
 
 
 }
