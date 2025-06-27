@@ -47,10 +47,16 @@ int main(int argv, char** argc){
     for (int i = 0; i < 10; i++){
         if (p[i] == NULL) continue;
         printf("page table for process %d\n", p[i]->pid);
-        for (int j = 0; j < p[i]->pt_size; j++){
+        for (int j = 0; j < p[i]->pt_size ;j++){
             printf("page idx: %d --> frame: %d\n", j, (p[i]->pt_ptr)[j]);
         }
+    printf("\n");
     }
+    printf("RAM: [ ");
+    for (int i = 0; i < mmu.num_frames; i++){
+        printf("%d ", mmu.frames[i].idx);
+    }
+    printf("]\n");
 
 
 }
