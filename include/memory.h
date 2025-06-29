@@ -11,10 +11,15 @@ typedef struct PageTableBlock{
 
 } PTB;
 
+typedef struct FrameInfo{
+    int idx;
+    int used;
+} Frame;
+
 typedef struct MMU{
     int* RAM;
     int* DISK;
-    int* frame_bitmap;
+    Frame* frames;
 
     // information needed for page tables
     PTB* pt_blocks;
@@ -42,9 +47,10 @@ void free_page_table(int base, PTB* blocks, int* pt_block_count);
 void merge_free_blocks(PTB* blocks, int* pt_block_count);
 void print(PTB* blocks, int* pt_block_count);
 
-// old functions
-// void page_table_print();
-// void page_assign(int pid);
+// mapping frames to page table
+int find_free_frame(MMU* mmu);
+
+
 
 
 #endif

@@ -1,5 +1,28 @@
 #include "../include/memory.h"
 #include <stdlib.h>
+#include <time.h>
+
+// AUX FUNCTIONS
+
+void shuffle_frames(Frame* frames, int n) {
+
+    static int initialized = 0;
+    if (!initialized) {
+        srand(time(NULL));
+        initialized = 1;
+    }
+
+    for (int i = n - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        Frame temp = frames[i];
+        frames[i] = frames[j];
+        frames[j] = temp;
+    }
+}
+
+// AUX FUNCTIONS END
+
+
 
 void mmu_init(MMU* mmu, MMU_config* config){
     // initializing memories
@@ -9,8 +32,16 @@ void mmu_init(MMU* mmu, MMU_config* config){
 
     mmu->RAM = calloc((mmu->num_frames + mmu->ram_size), sizeof(int));
     mmu->DISK = calloc(mmu->disk_size, sizeof(int));
-    mmu->frame_bitmap = calloc(mmu->num_frames, sizeof(int));
-    
+
+    // initializing frames
+    mmu->frames = malloc(mmu->num_frames*sizeof(Frame));
+    for(int i = 0; i < mmu->num_frames; i++){
+        mmu->frames[i].idx = i;
+        mmu->frames[i].used = 0;
+    }
+
+    shuffle_frames(mmu->frames, mmu->num_frames);
+
     // initializing pt controller 
     mmu->max_pt_blocks = config->max_pt_blocks;
     mmu->pt_blocks = malloc(mmu->max_pt_blocks*sizeof(PTB));
@@ -19,27 +50,15 @@ void mmu_init(MMU* mmu, MMU_config* config){
     mmu->pt_block_count = 1;
 }
 
-// void page_table_print(){
-//     printf("\n\n--- PAGE TABLE ---\n");
-//     for(int i = 0; i < NUM_FRAMES_PER_PROCESS; i++){
-//         printf("pt entry: %d    physichal frame: %d\n", i, page_table_ptr[i]);
-//     }
-//     printf("\n\n");
-// }
+int find_free_frame(MMU* mmu){
 
-// void page_assign(int pid){
+    for(int i = 0; i < mmu->num_frames; i++){
+        if (mmu->frames[i].used == 0){
+            mmu->frames[i].used = 1;
+            return mmu->frames[i].idx;
+        }
+    }
 
-//     int frames_assigned = NUM_FRAMES_PER_PROCESS;
-//     for(int i = 0; i < NUM_FRAMES; i++){
-//         //se ho assegnato tutti i frame allora esco dal ciclo
-//         if (frames_assigned == 0) break;
+    return -1;
+}
 
-//         //se il frame e libero allora lo assegno
-//         if (frame_bitmap[i] == 0){
-//             page_table_ptr[frames_assigned-1] = i;
-//             frame_bitmap[i] = 1;
-//             frames_assigned--;
-            
-//         }
-//     }
-// }

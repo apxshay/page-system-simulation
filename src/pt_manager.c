@@ -1,4 +1,5 @@
 #include "../include/memory.h"
+#include <stdlib.h>
 
 int allocate_page_table(int slots_needed, PTB* blocks, int* pt_block_count) {
     for (int i = 0; i < *pt_block_count; ++i) {
@@ -32,22 +33,27 @@ void free_page_table(int base, PTB* blocks, int* pt_block_count) {
     }
 }
 
-void merge_free_blocks(PTB* blocks, int* pt_block_count) {
-    for (int i = 0; i < *pt_block_count; ++i) {
-        if (!blocks[i].used) {
-            for (int j = i + 1; j < *pt_block_count; ++j) {
-                if (!blocks[j].used &&
-                    blocks[i].start + blocks[i].size == blocks[j].start) {
-                    // merge j in i
-                    blocks[i].size += blocks[j].size;
+int compare_by_start(const void* a, const void* b) {
+    PTB* pa = (PTB*)a;
+    PTB* pb = (PTB*)b;
+    return pa->start - pb->start;
+}
 
-                    // remove block j
-                    for (int k = j; k < *pt_block_count - 1; ++k)
-                        blocks[k] = blocks[k + 1];
-                    (*pt_block_count)--;
-                    j--;
-                }
-            }
+void merge_free_blocks(PTB* blocks, int* pt_block_count) {
+    // Ordina i blocchi per indirizzo di partenza
+    qsort(blocks, *pt_block_count, sizeof(PTB), compare_by_start);
+
+    for (int i = 0; i < *pt_block_count - 1; ++i) {
+        if (!blocks[i].used && !blocks[i + 1].used &&
+            blocks[i].start + blocks[i].size == blocks[i + 1].start) {
+            // merge i+1 into i
+            blocks[i].size += blocks[i + 1].size;
+
+            // shift tutti i blocchi successivi
+            for (int k = i + 1; k < *pt_block_count - 1; ++k)
+                blocks[k] = blocks[k + 1];
+            (*pt_block_count)--;
+            i--; // ricontrolla questo indice dopo merge
         }
     }
 }
