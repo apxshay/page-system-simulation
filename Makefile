@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Iinclude
 
 # File sorgenti ed eseguibile
-SRC = src/global.c src/memory.c src/process.c src/pt_manager.c main.c
+SRC = src/global.c src/memory.c src/process.c src/pt_manager.c main.c src/tlb.c
 EXEC = simulator
 
 # Regola principale

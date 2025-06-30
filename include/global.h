@@ -11,14 +11,18 @@
 #define DISK_SIZE (2 * RAM_SIZE)
 #define PAGE_TABLE_PTR ACUTAL_RAM_SIZE
 #define NUM_FRAMES (ACTUAL_RAM_SIZE / FRAME_SIZE)
+#define TLB_SIZE (NUM_FRAMES / 8)
 #define PAGE_TABLE_ENTRIES (NUM_FRAMES_PER_PROCESS)
+
+#define TLB_MISS 0xFFFFFFFF
 
 
 
 extern int* page_table_ptr;
 extern int process_global_cnt;
 extern int active_process_cnt;
-
+extern int tlb_miss_count;
+extern int tlb_hit_count;
 
 
 #endif

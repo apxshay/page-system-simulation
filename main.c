@@ -16,11 +16,20 @@ int main(int argv, char** argc){
     config.ram_size = ACTUAL_RAM_SIZE;
     config.max_pt_blocks = RAM_SIZE / 2;
     config.num_frames = NUM_FRAMES;
+    config.tlb_size = TLB_SIZE;
+    config.tlb_replacement_policy = TLB_REPL_POLICY_CLOCK;
 
     mmu_init(&mmu, &config);
     process* p[10];
     
     for (int i = 0; i < 10; i++){
+
+        //init tlb
+        for (int j = 0; j < mmu.TLB->tlb_size; j++){
+            mmu.TLB->entries[j].valid = 0;
+            mmu.TLB->entries[j].referenced = 0;
+        }
+
         int frames = 1 + rand() % 20;
         process_data p_data = {
             .mmu = &mmu, 
@@ -31,48 +40,29 @@ int main(int argv, char** argc){
             printf("impossibile to create process\n");
             continue;
         }
-        printf("printing p_data to check: frames requested: %d\n", p_data.frames_requested);
+
+        for(int j = 0; j < p[i]->pt_size; j++){
+            printf("pte: %d  frame:  %d\n", j, p[i]->pt_ptr[j]);
+        }
+        uint32_t vaddr = generate_vaddr(p[i], &p_data);
+        for(int j = 0; j < 100; j++){
+            uint32_t paddr = translate_vaddr(p[i], &p_data, vaddr);
+            printf("[TRANSLATE] vaddr=%#06x vpn=%#06x pfn=%#06x offset=%#06x paddr=%#06x\n",
+       vaddr, (vaddr & mmu.TLB->vpn_mask) >> mmu.TLB->offset_bits, p[i]->pt_ptr[(vaddr & mmu.TLB->vpn_mask) >> mmu.TLB->offset_bits],
+       vaddr & mmu.TLB->offset_mask,
+       paddr);
+
+            vaddr = generate_vaddr_locality(vaddr, 90, p[i], &p_data);
+        }
         
-        printf("created process %d: requested frames: %d, start in memory: %d\nmemory situation:\n", p[i]->pid, p[i]->pt_size, (int)(p[i]->pt_ptr - p_data.mmu->RAM));
-        print(mmu.pt_blocks, &(mmu.pt_block_count));
-
-        if (frames < 5){
-            printf("destroyed process %d\n", p[i]->pid);
-            process_destroy(p[i], &p_data);
-            p[i] = NULL; 
-            print(mmu.pt_blocks, &(mmu.pt_block_count));
-        }
     }
+    printf("\n\nTLB HIT COUNT = %d\nTLB MISS COUNT = %d\nTLB HIT RATIO = %f\nTLB MISS RATIO = %f\n",
+        tlb_hit_count, 
+        tlb_miss_count,
+        (double)tlb_hit_count/(tlb_hit_count + tlb_miss_count),
+        (double)tlb_miss_count/(tlb_hit_count + tlb_miss_count)
+    );
 
-    for (int i = 0; i < 10; i++){
-        if (p[i] == NULL) continue;
-        printf("page table for process %d\n", p[i]->pid);
-        for (int j = 0; j < p[i]->pt_size ;j++){
-            printf("page idx: %d --> frame: %d\n", j, (p[i]->pt_ptr)[j]);
-        }
-        printf("\n");
-    }
-    printf("RAM: [ ");
-    for (int i = 0; i < mmu.num_frames; i++){
-        printf("%d ", mmu.frames[i].idx);
-    }
-    printf("]\n\n");
-
-    for (int i = 0; i < 10; i++){
-        if (p[i] == NULL) continue;
-        printf("some vaddresses for process  %d\n", p[i]->pid);
-        int n_vaddr = 1 + rand() % 100;
-        for (int j = 0; j < n_vaddr; j++){
-            process_data p_data = {.mmu = &mmu, .frames_requested = p[i]->pt_size};
-            uint32_t vaddr =  generate_vaddr(p[i], &p_data);
-            printf("vaddr: %u  limit: %u  is valid: %d\n", vaddr, p[i]->max_vaddr,vaddr <= p[i]->max_vaddr);
-        }
-        printf("\n\n\n");
-        printf("some info about process: \nvpn limit: %u  offset limit: %u  mmu->frame_size: %d\n\n", (p[i]->pt_size - 1) /*<< mmu.offset_bits*/, mmu.frame_size - 1, mmu.frame_size);
-
-
-
-    }
 
 
 }

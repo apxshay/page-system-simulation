@@ -3,6 +3,7 @@
 
 #include "global.h"
 #include <stdio.h>
+#include "tlb.h"
 
 typedef struct PageTableBlock{
     int start;
@@ -30,11 +31,9 @@ typedef struct MMU{
     int disk_size;
     int num_frames;
     int frame_size;
-    int vpn_bits;
-    int offset_bits;
 
-    uint32_t vpn_mask;
-    uint32_t offset_mask;
+    // virtual addresses and TLB
+    TLB* TLB;
 
     
 } MMU;
@@ -42,8 +41,10 @@ typedef struct MMU{
 typedef struct MMU_config{
     int ram_size;
     int disk_size;
+    int tlb_size;
     int num_frames;
     int max_pt_blocks;
+    TLBReplacementPolicy tlb_replacement_policy;
 } MMU_config;
 
 

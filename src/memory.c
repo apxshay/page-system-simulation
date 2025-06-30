@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+
 // AUX FUNCTIONS
 
 static void shuffle_frames(Frame* frames, int n) {
@@ -59,11 +60,37 @@ void mmu_init(MMU* mmu, MMU_config* config){
     mmu->pt_block_count = 1;
 
     // initializing virtual address stuff
-    mmu->vpn_bits = log2(mmu->num_frames);
-    mmu->offset_bits = log2(mmu->frame_size);
+    mmu->TLB = malloc(sizeof(TLB));
+    mmu->TLB->replace_index = 0;
+    mmu->TLB->tlb_size = config->tlb_size;
+    mmu->TLB->entries = malloc(mmu->TLB->tlb_size * sizeof(TLBEntry));
+    // initializing each entry
+    for (int i = 0; i < mmu->TLB->tlb_size; i++){
+        mmu->TLB->entries[i].pfn = 0;
+        mmu->TLB->entries[i].vpn = 0;
+        mmu->TLB->entries[i].referenced = 0;
+        mmu->TLB->entries[i].valid = 0;
+    }
 
-    mmu->vpn_mask = ((1U << mmu->vpn_bits) - 1) << mmu->offset_bits;
-    mmu->offset_mask = (1U << mmu->offset_mask) - 1;
+    mmu->TLB->vpn_bits = log2(mmu->num_frames);
+    mmu->TLB->offset_bits = log2(mmu->frame_size);
+
+    mmu->TLB->vpn_mask = ((1U << mmu->TLB->vpn_bits) - 1) << mmu->TLB->offset_bits;
+    mmu->TLB->offset_mask = (1U << mmu->TLB->offset_bits) - 1;
+
+    // managing tlb replacement policy and ops 
+    mmu->TLB->replacement_policy = config->tlb_replacement_policy;
+    switch (mmu->TLB->replacement_policy)
+    {
+    case TLB_REPL_POLICY_FIFO:
+        mmu->TLB->update_policy = tlb_update_fifo;
+        break;
+    case TLB_REPL_POLICY_CLOCK:
+        mmu->TLB->update_policy = tlb_update_clock;
+        break;
+    default:
+        break;
+    }
 }
 
 int find_free_frame(MMU* mmu){
