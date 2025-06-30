@@ -29,6 +29,14 @@ typedef struct MMU{
     int ram_size;
     int disk_size;
     int num_frames;
+    int frame_size;
+    int vpn_bits;
+    int offset_bits;
+
+    uint32_t vpn_mask;
+    uint32_t offset_mask;
+
+    
 } MMU;
 
 typedef struct MMU_config{

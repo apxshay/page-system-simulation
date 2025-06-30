@@ -13,7 +13,7 @@ int main(int argv, char** argc){
     srand(time(NULL));
 
     config.disk_size = DISK_SIZE;
-    config.ram_size = RAM_SIZE;
+    config.ram_size = ACTUAL_RAM_SIZE;
     config.max_pt_blocks = RAM_SIZE / 2;
     config.num_frames = NUM_FRAMES;
 
@@ -50,13 +50,29 @@ int main(int argv, char** argc){
         for (int j = 0; j < p[i]->pt_size ;j++){
             printf("page idx: %d --> frame: %d\n", j, (p[i]->pt_ptr)[j]);
         }
-    printf("\n");
+        printf("\n");
     }
     printf("RAM: [ ");
     for (int i = 0; i < mmu.num_frames; i++){
         printf("%d ", mmu.frames[i].idx);
     }
-    printf("]\n");
+    printf("]\n\n");
+
+    for (int i = 0; i < 10; i++){
+        if (p[i] == NULL) continue;
+        printf("some vaddresses for process  %d\n", p[i]->pid);
+        int n_vaddr = 1 + rand() % 100;
+        for (int j = 0; j < n_vaddr; j++){
+            process_data p_data = {.mmu = &mmu, .frames_requested = p[i]->pt_size};
+            uint32_t vaddr =  generate_vaddr(p[i], &p_data);
+            printf("vaddr: %u  limit: %u  is valid: %d\n", vaddr, p[i]->max_vaddr,vaddr <= p[i]->max_vaddr);
+        }
+        printf("\n\n\n");
+        printf("some info about process: \nvpn limit: %u  offset limit: %u  mmu->frame_size: %d\n\n", (p[i]->pt_size - 1) /*<< mmu.offset_bits*/, mmu.frame_size - 1, mmu.frame_size);
+
+
+
+    }
 
 
 }

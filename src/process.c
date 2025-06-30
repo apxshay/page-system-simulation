@@ -1,5 +1,6 @@
 #include "../include/process.h"
 #include <stdlib.h>
+#include <math.h>
 
 
 process* create_process(process* p, process_data* config){
@@ -32,6 +33,13 @@ process* create_process(process* p, process_data* config){
     
     p->pid = active_process_cnt++;
     
+
+    // generating max virtual address
+    uint32_t vpn = (p->pt_size - 1) << config->mmu->offset_bits;
+    uint32_t offset = config->mmu->frame_size - 1;
+    
+    p->max_vaddr = vpn | offset;
+    
     return p;
 }
 
@@ -56,4 +64,14 @@ void process_destroy(process* p, process_data* data){
                     &(data->mmu->pt_block_count));
     free(p);
     active_process_cnt--;
+}
+
+uint32_t generate_vaddr(process* p, process_data* data){
+
+    uint32_t vpn = (rand() % p->pt_size) << data->mmu->offset_bits;
+    uint32_t offset = (rand() % data->mmu->frame_size);
+
+    uint32_t vaddr = vpn | offset;
+    return vaddr;
+    
 }

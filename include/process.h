@@ -8,9 +8,10 @@
 
 typedef struct process{
     int pid;
-
     int* pt_ptr;
     int pt_size;
+
+    uint32_t max_vaddr; // used for debugging
 } process;
 
 typedef struct process_data{
@@ -22,4 +23,5 @@ process* create_process(process* p, process_data* config);
 
 void process_destroy(process* p, process_data* data);
 
+uint32_t generate_vaddr(process* p, process_data* data);
 #endif
