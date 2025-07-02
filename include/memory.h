@@ -5,11 +5,14 @@
 #include <stdio.h>
 #include "tlb.h"
 
+#define NO_FIT 10000
+
 typedef struct PageTableBlock{
     int start;
     int size;
     int used;
 
+    int pid;
 } PTB;
 
 typedef struct FrameInfo{
@@ -24,6 +27,7 @@ typedef struct MMU{
 
     // information needed for page tables
     PTB* pt_blocks;
+    int pt_blocks_index; // index where from page table space i need to start the eviction
     int max_pt_blocks;
     int pt_block_count;
 
@@ -51,7 +55,7 @@ typedef struct MMU_config{
 void mmu_init(MMU* mmu, MMU_config* config);
 
 // page table manager funtions
-int allocate_page_table(int slots_needed, PTB* blocks, int* pt_block_count);
+int allocate_page_table(int slots_needed, PTB* blocks, int* pt_block_count, int pid);
 void free_page_table(int base, PTB* blocks, int* pt_block_count);
 void merge_free_blocks(PTB* blocks, int* pt_block_count);
 void print(PTB* blocks, int* pt_block_count);

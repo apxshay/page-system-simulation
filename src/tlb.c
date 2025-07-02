@@ -25,3 +25,4 @@ void tlb_update_clock(TLB* tlb, uint32_t vpn, uint32_t pfn){
     tlb->replace_index = (tlb->replace_index + 1) % tlb->tlb_size;
     
 }
+

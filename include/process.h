@@ -11,6 +11,10 @@ typedef struct process{
     int* pt_ptr;
     int pt_size;
 
+    int on_disk;
+    int pt_disk_start;
+    int frames_disk_start;
+
     uint32_t max_vaddr; // used for debugging
 } process;
 

@@ -14,8 +14,19 @@ process* create_process(process* p, process_data* config){
     // allocate page table in RAM
     int pt_base = allocate_page_table(p->pt_size, 
                             config->mmu->pt_blocks, 
-                            &(config->mmu->pt_block_count));
-    if (pt_base < 0) return NULL;
+                            &(config->mmu->pt_block_count),
+                            p->pid);
+    if (pt_base < 0){
+        // TODO: find best fit, replace it and allocate new page table and map frames
+        int pt_to_evict_base = find_best_fit_to_evict(p->pt_size, 
+                                                      config->mmu->pt_blocks,
+                                                    &(config->mmu->pt_block_count));
+        if (pt_to_evict_base < 0){
+            // no block is big enough to be replaced and respect the answer, so the process can not be created
+            return NULL;
+        }
+        
+    } 
 
     p->pt_ptr = config->mmu->RAM + pt_base;
 
@@ -82,7 +93,7 @@ uint32_t generate_vaddr_locality(uint32_t base_vaddr, int locality_percent, proc
 
     if (r <= locality_percent){
         // generate with locality
-        int64_t offset = (rand() % 129) - 64; // da -64 a +64
+        int64_t offset = (rand() % ((2*FRAME_SIZE) + 1)) - FRAME_SIZE; // in range [addr-64, addr+64]
         int64_t new_addr = (int64_t)base_vaddr + offset;
         if (new_addr < 0) new_addr = 0;
         if (new_addr >= p->max_vaddr) new_addr = p->max_vaddr - 1;
