@@ -39,7 +39,9 @@ typedef struct MMU{
     // virtual addresses and TLB
     TLB* TLB;
 
-    
+    // information for virtual memory
+    int disk_pt_index;
+    int disk_frames_index;
 } MMU;
 
 typedef struct MMU_config{
@@ -56,8 +58,9 @@ void mmu_init(MMU* mmu, MMU_config* config);
 
 // page table manager funtions
 int allocate_page_table(int slots_needed, PTB* blocks, int* pt_block_count, int pid);
-void free_page_table(int base, PTB* blocks, int* pt_block_count);
-void merge_free_blocks(PTB* blocks, int* pt_block_count);
+int free_page_table(int base, PTB* blocks, int* pt_block_count);
+int merge_free_blocks(PTB* blocks, int* pt_block_count);
+int find_best_fit_to_evict(int slots_needed, PTB* blocks, int* pt_block_count, int* pt_blocks_index, int pt_space_size);
 void print(PTB* blocks, int* pt_block_count);
 
 // mapping frames to page table

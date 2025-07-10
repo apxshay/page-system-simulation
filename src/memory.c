@@ -56,7 +56,7 @@ void mmu_init(MMU* mmu, MMU_config* config){
     mmu->max_pt_blocks = config->max_pt_blocks;
     mmu->pt_blocks = malloc(mmu->max_pt_blocks*sizeof(PTB));
     // size equals mmu->num_frames because page table space is as big as the number of frames in RAM
-    mmu->pt_blocks[0] = (PTB){.start = 0, .size = mmu->num_frames, .used = 0};
+    mmu->pt_blocks[0] = (PTB){.start = 0, .size = mmu->num_frames, .used = 0, .pid = -1};
     mmu->pt_block_count = 1;
 
     // initializing virtual address stuff
@@ -91,6 +91,10 @@ void mmu_init(MMU* mmu, MMU_config* config){
     default:
         break;
     }
+
+    // virtual memory
+    mmu->disk_pt_index = 0;
+    mmu->disk_frames_index = config->ram_size; // TODO: da capire
 }
 
 int find_free_frame(MMU* mmu){

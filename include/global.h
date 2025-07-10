@@ -5,6 +5,7 @@
 
 #define ACTUAL_RAM_SIZE 4096
 #define FRAME_SIZE 64
+#define NUM_PROCESSES 20
 
 
 #define RAM_SIZE (ACTUAL_RAM_SIZE + FRAME_SIZE)

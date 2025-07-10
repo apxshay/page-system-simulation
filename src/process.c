@@ -2,30 +2,61 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <stdio.h>
+
+void print_frames(MMU* mmu) {
+    printf("=== Frames Info ===\n");
+    for (int i = 0; i < mmu->num_frames; i++) {
+        printf("Frame %3d | idx = %3d | used = %d\n",
+               i,
+               mmu->frames[i].idx,
+               mmu->frames[i].used);
+    }
+    printf("===================\n");
+}
+
+process process_list[NUM_PROCESSES];
+process_data process_data_list[NUM_PROCESSES];
 
 process* create_process(process* p, process_data* config){
     if (!(p = malloc(sizeof(process)))){
         return NULL;
     }
     
+    p->pid = active_process_cnt;
+    active_process_cnt += 1;
     
     p->pt_size = config->frames_requested;
+    p->on_disk = 0;
+    p->pt_disk_start = -1;
+    p->frames_disk_start = -1;
 
     // allocate page table in RAM
     int pt_base = allocate_page_table(p->pt_size, 
-                            config->mmu->pt_blocks, 
-                            &(config->mmu->pt_block_count),
-                            p->pid);
+                                      config->mmu->pt_blocks, 
+                                      &(config->mmu->pt_block_count),
+                                      p->pid);
     if (pt_base < 0){
         // TODO: find best fit, replace it and allocate new page table and map frames
+        printf("trying to create process but can not allocate page table, frames requested: %d\n", p->pt_size);fflush(stdout);
+        
+        // print(config->mmu->pt_blocks, &(config->mmu->pt_block_count));
         int pt_to_evict_base = find_best_fit_to_evict(p->pt_size, 
                                                       config->mmu->pt_blocks,
-                                                    &(config->mmu->pt_block_count));
+                                                      &(config->mmu->pt_block_count),
+                                                      &(config->mmu->pt_blocks_index),
+                                                      config->mmu->num_frames);
+        // print(config->mmu->pt_blocks, &(config->mmu->pt_block_count));
+        
         if (pt_to_evict_base < 0){
-            // no block is big enough to be replaced and respect the answer, so the process can not be created
+            // 
             return NULL;
         }
-        
+        if ((pt_base = allocate_page_table(p->pt_size, 
+                                           config->mmu->pt_blocks, 
+                                           &(config->mmu->pt_block_count),
+                                           p->pid)) < 0) return NULL;                                   
+        print(config->mmu->pt_blocks, &(config->mmu->pt_block_count));
     } 
 
     p->pt_ptr = config->mmu->RAM + pt_base;
@@ -33,16 +64,18 @@ process* create_process(process* p, process_data* config){
     // map frames into page table
     // printf("n_frames: %d\n", p->pt_size);
     for(int i = 0; i < p->pt_size; i++){
+        // printf("problem not there 1\n");fflush(stdout);
         int free_frame = find_free_frame(config->mmu);
-        
+        // printf("problem not there 2\n");fflush(stdout);
         if (free_frame < 0){
+            // printf("problem not there 3\n");fflush(stdout);
             return NULL;
         }
         p->pt_ptr[i] = free_frame;
     }
 
     
-    p->pid = active_process_cnt++;
+    
     
 
     // generating max virtual address

@@ -3,8 +3,6 @@
 
 #include "memory.h"
 
-#define MAX_PROCESSES_ON_DISK 128
-
 
 typedef struct process{
     int pid;
@@ -22,6 +20,9 @@ typedef struct process_data{
     MMU* mmu;
     int frames_requested;
 } process_data;
+
+extern process process_list[NUM_PROCESSES];
+extern process_data process_data_list[NUM_PROCESSES];
 
 process* create_process(process* p, process_data* config);
 
