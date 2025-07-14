@@ -21,8 +21,8 @@ typedef struct process_data{
     int frames_requested;
 } process_data;
 
-extern process process_list[NUM_PROCESSES];
-extern process_data process_data_list[NUM_PROCESSES];
+extern process* process_list;
+extern process_data* process_data_list;
 
 process* create_process(process* p, process_data* config);
 

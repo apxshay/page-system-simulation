@@ -7,6 +7,8 @@
 
 #define NO_FIT 10000
 
+typedef struct PageTableBlock PTB;
+
 typedef struct PageTableBlock{
     int start;
     int size;
@@ -60,13 +62,16 @@ void mmu_init(MMU* mmu, MMU_config* config);
 int allocate_page_table(int slots_needed, PTB* blocks, int* pt_block_count, int pid);
 int free_page_table(int base, PTB* blocks, int* pt_block_count);
 int merge_free_blocks(PTB* blocks, int* pt_block_count);
-int find_best_fit_to_evict(int slots_needed, PTB* blocks, int* pt_block_count, int* pt_blocks_index, int pt_space_size);
-void print(PTB* blocks, int* pt_block_count);
 
-// mapping frames to page table
 int find_free_frame(MMU* mmu);
 
+int find_best_fit_to_evict(int slots_needed, PTB* blocks, int* pt_block_count, int* pt_blocks_index, int pt_space_size);
 
+extern void print_ptb(PTB* blocks, int* pt_block_count);
+
+extern void print_ptb_to_file(PTB* blocks, int* pt_block_count, const char* filename);
+
+int compare_by_start(const void* a, const void* b);
 
 
 #endif

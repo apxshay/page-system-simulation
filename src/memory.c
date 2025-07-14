@@ -3,7 +3,7 @@
 #include <time.h>
 
 
-// AUX FUNCTIONS
+// =====AUX FUNCTIONS=====
 
 static void shuffle_frames(Frame* frames, int n) {
 
@@ -29,7 +29,7 @@ static int log2(int n) {
 }
 
 
-// AUX FUNCTIONS END
+// =====AUX FUNCTIONS END=====
 
 
 
@@ -94,7 +94,7 @@ void mmu_init(MMU* mmu, MMU_config* config){
 
     // virtual memory
     mmu->disk_pt_index = 0;
-    mmu->disk_frames_index = config->ram_size; // TODO: da capire
+    mmu->disk_frames_index = config->ram_size; // TODO: to handle
 }
 
 int find_free_frame(MMU* mmu){

@@ -15,8 +15,8 @@ void print_frames(MMU* mmu) {
     printf("===================\n");
 }
 
-process process_list[NUM_PROCESSES];
-process_data process_data_list[NUM_PROCESSES];
+process* process_list;
+process_data* process_data_list;
 
 process* create_process(process* p, process_data* config){
     if (!(p = malloc(sizeof(process)))){
@@ -37,38 +37,39 @@ process* create_process(process* p, process_data* config){
                                       &(config->mmu->pt_block_count),
                                       p->pid);
     if (pt_base < 0){
-        // TODO: find best fit, replace it and allocate new page table and map frames
-        printf("trying to create process but can not allocate page table, frames requested: %d\n", p->pt_size);fflush(stdout);
         
-        // print(config->mmu->pt_blocks, &(config->mmu->pt_block_count));
+        FILE * process_log = fopen("output/process_creation_log.txt", "a");
+        fprintf(process_log, "[PAGE TABLE SPACE FULL] Cannot allocate %d frames for new process." 
+                             " Some processes will be swapped to disk in order to proceed.\n\n", p->pt_size);fflush(process_log);
+        printf("\nPAGE TABLE SPACE IS FULL.\nSOME PROCESSES WILL BE SWAPPED IN ORDER TO CREATE PROCESS\n\n");
+        
+        
         int pt_to_evict_base = find_best_fit_to_evict(p->pt_size, 
                                                       config->mmu->pt_blocks,
                                                       &(config->mmu->pt_block_count),
                                                       &(config->mmu->pt_blocks_index),
                                                       config->mmu->num_frames);
-        // print(config->mmu->pt_blocks, &(config->mmu->pt_block_count));
+        
         
         if (pt_to_evict_base < 0){
-            // 
+            
             return NULL;
         }
         if ((pt_base = allocate_page_table(p->pt_size, 
                                            config->mmu->pt_blocks, 
                                            &(config->mmu->pt_block_count),
                                            p->pid)) < 0) return NULL;                                   
-        print(config->mmu->pt_blocks, &(config->mmu->pt_block_count));
+        
     } 
+    print_ptb_to_file(config->mmu->pt_blocks, &(config->mmu->pt_block_count), "output/process_creation_log.txt");
 
     p->pt_ptr = config->mmu->RAM + pt_base;
 
     // map frames into page table
-    // printf("n_frames: %d\n", p->pt_size);
+    
     for(int i = 0; i < p->pt_size; i++){
-        // printf("problem not there 1\n");fflush(stdout);
         int free_frame = find_free_frame(config->mmu);
-        // printf("problem not there 2\n");fflush(stdout);
         if (free_frame < 0){
-            // printf("problem not there 3\n");fflush(stdout);
             return NULL;
         }
         p->pt_ptr[i] = free_frame;
@@ -124,6 +125,7 @@ uint32_t generate_vaddr(process* p, process_data* data){
 uint32_t generate_vaddr_locality(uint32_t base_vaddr, int locality_percent, process* p, process_data* data) {
     int r = 1 + rand() % 100;
 
+    // if locality percentage is hit
     if (r <= locality_percent){
         // generate with locality
         int64_t offset = (rand() % ((2*FRAME_SIZE) + 1)) - FRAME_SIZE; // in range [addr-64, addr+64]
@@ -164,12 +166,14 @@ void update_tlb(TLB* tlb, uint32_t vpn, uint32_t pfn){
 uint32_t translate_vaddr(process* p, process_data* data, uint32_t vaddr){
     
     uint32_t pfn = tlb_lookup(data->mmu->TLB, vaddr);
-    if (pfn != TLB_MISS){ // TLB HIT
+    // TLB HIT
+    if (pfn != TLB_MISS){ 
         tlb_hit_count++;
         uint32_t paddr = (pfn << data->mmu->TLB->offset_bits) | (vaddr & data->mmu->TLB->offset_mask);
         return paddr;
     }
-    else { // TLB MISS
+    // TLB MISS
+    else { 
         tlb_miss_count++;
         uint32_t vpn = (vaddr & data->mmu->TLB->vpn_mask) >> data->mmu->TLB->offset_bits;
         pfn = p->pt_ptr[vpn];

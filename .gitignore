@@ -1,2 +1,5 @@
-*.txt
-simulator
+output/*.txt
+simulation
+.dist
+.vscode
+output
